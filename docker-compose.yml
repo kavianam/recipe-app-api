@@ -24,7 +24,6 @@ services:
       # 2. db would be available to app with a network , means we can connect to the database from app just by saying db.
   db:
     image: postgres:10-alpine
-    hostname: db
     environment:
       - POSTGRES_DB=app
       - POSTGRES_USER=postgres
