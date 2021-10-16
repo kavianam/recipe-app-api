@@ -4,9 +4,9 @@ MAINTAINER Kavian AmirMozafari
 ENV PYTHONUNBUFFERED 1
 
 COPY ./requirments.txt /requirments.txt
-RUN apk add --update --no-cache postgresql-client
+RUN apk add --update --no-cache postgresql-client postgresql-dev
 RUN apk add --update --no-cache --virtual .tmp-build-deps \
-        gcc libc-dev linux-headers postgresql-dev
+        gcc libc-dev linux-headers
 RUN pip install -r /requirments.txt
 RUN apk del .tmp-build-deps
 
