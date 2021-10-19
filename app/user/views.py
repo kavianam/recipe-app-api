@@ -35,4 +35,3 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
         get_object has the job to retrieve the user object, so we override it and just return the use
         """
         return self.request.user
-
