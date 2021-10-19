@@ -8,6 +8,7 @@ from rest_framework import status
 
 CREATE_USER_URL = reverse('user:create')
 TOKEN_URL = reverse('user:token')
+ME_URL = reverse('user:me')
 
 
 def create_user(**params):
@@ -98,3 +99,52 @@ class PublicUserApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertNotIn('token', res.data)
+
+    def test_retrieve_user_unauthorized(self):
+        """Test that authentication is required for users"""
+        res = self.client.get(ME_URL)
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class PrivateUserApiTests(TestCase):
+    """Test API requests require authentication"""
+
+    def setUp(self) -> None:
+        self.user = create_user(
+            email='test@test.com',
+            password='test123',
+            name='Test'
+        )
+        self.client = APIClient()
+        # self.client.force_login(user=self.user)
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_profile_success(self):
+        """Test retrieving profile for logged in used"""
+        res = self.client.get(ME_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, {
+            'email': 'test@test.com',
+            'name': 'Test'
+        })
+
+    def test_post_me_not_allowed(self):
+        """Test that POST method is not allowed in the me url"""
+        res = self.client.post(ME_URL, {})
+
+        self.assertEqual(res.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        """Test updating the user profile for authenticated user"""
+        payload = {
+            'email': 'test@test.com',
+            'password': 'new_password',
+            'name': 'new_name'
+        }
+        res = self.client.patch(ME_URL, payload)
+        self.user.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertTrue(self.user.check_password(payload['password']))
