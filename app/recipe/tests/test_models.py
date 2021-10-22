@@ -3,8 +3,7 @@ from django.contrib.auth import get_user_model
 
 from rest_framework.test import APIClient
 
-from ..models import Tag
-# from recipe.models import Tag
+from recipe.models import Tag, Ingredient
 
 
 def create_user(email='test@test.com', password='Test1234'):
@@ -25,3 +24,19 @@ class TestTag(TestCase):
             name='vegan'
         )
         self.assertEqual(str(tag), tag.name)
+
+
+class TestIngredient(TestCase):
+    """Test the Ingredient model"""
+
+    def setUp(self) -> None:
+        self.client = APIClient
+
+    def test_ingredient_str(self):
+        """Test the ingredient string representation"""
+        ingredient = Ingredient.objects.create(
+            name='Sugar',
+            user=create_user()
+        )
+
+        self.assertEqual(str(ingredient), ingredient.name)
