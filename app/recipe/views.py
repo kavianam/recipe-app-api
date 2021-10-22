@@ -20,7 +20,9 @@ class TagViewSet(mixins.ListModelMixin,
         serializer.save(user=self.request.user)
 
 
-class IngredientViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class IngredientViewSet(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        viewsets.GenericViewSet):
     """Manage Ingredients in the database"""
     serializer_class = serializers.IngredientSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -28,3 +30,7 @@ class IngredientViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         return Ingredient.objects.filter(user=self.request.user).order_by('-name')
+
+    def perform_create(self, serializer):
+        """Assign the user to the ingredient obj. We can also override the create method of the IngredientSerializer"""
+        serializer.save(user=self.request.user)
