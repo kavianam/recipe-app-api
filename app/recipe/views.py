@@ -4,33 +4,27 @@ from . import serializers
 from .models import Tag, Ingredient
 
 
-class TagViewSet(mixins.ListModelMixin,
-                 mixins.CreateModelMixin,
-                 viewsets.GenericViewSet):
-    """Manage tags in the database"""
+class BaseRecipeAttrViewSet(mixins.ListModelMixin,
+                            mixins.CreateModelMixin,
+                            viewsets.GenericViewSet):
+    """Base viewSet for user owned recipe attributes"""
+    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (authentication.TokenAuthentication,)
+
+    def get_queryset(self):
+        """Return objects for the current authenticated user only"""
+        return self.queryset.filter(user=self.request.user).order_by('-name')
+
+    def perform_create(self, serializer):
+        """Assign the user to the obj. We can also override the create method of the Serializer"""
+        serializer.save(user=self.request.user)
+
+
+class TagViewSet(BaseRecipeAttrViewSet):
     serializer_class = serializers.TagSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (authentication.TokenAuthentication,)
-
-    def get_queryset(self):
-        return Tag.objects.filter(user=self.request.user).order_by('-name')
-
-    def perform_create(self, serializer):
-        """Assign the user to the tag user. We can also override the create method of the TagSerializer"""
-        serializer.save(user=self.request.user)
+    queryset = Tag.objects.all()
 
 
-class IngredientViewSet(mixins.ListModelMixin,
-                        mixins.CreateModelMixin,
-                        viewsets.GenericViewSet):
-    """Manage Ingredients in the database"""
+class IngredientViewSet(BaseRecipeAttrViewSet):
     serializer_class = serializers.IngredientSerializer
-    permission_classes = (permissions.IsAuthenticated,)
-    authentication_classes = (authentication.TokenAuthentication,)
-
-    def get_queryset(self):
-        return Ingredient.objects.filter(user=self.request.user).order_by('-name')
-
-    def perform_create(self, serializer):
-        """Assign the user to the ingredient obj. We can also override the create method of the IngredientSerializer"""
-        serializer.save(user=self.request.user)
+    queryset = Ingredient.objects.all()
