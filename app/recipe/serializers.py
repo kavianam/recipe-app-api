@@ -23,19 +23,17 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     """Serializer for recipe objects"""
-    ingredients = serializers.SlugRelatedField(
-        slug_field='name',
-        queryset=Ingredient.objects.all(),
-        many=True
+    ingredients = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Ingredient.objects.all()
     )
-    tags = serializers.SlugRelatedField(
-        slug_field='name',
-        queryset=Tag.objects.all(),
-        many=True
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Tag.objects.all()
     )
-    # We could also use PrimaryKeyRelatedField, but we wanted to show the ingredients name instead of their id
-    # ingredients = serializers.PrimaryKeyRelatedField(many=True, queryset=Ingredient.objects.all())
-    # tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    # We could also use SlugRelatedField, but we wanted to show ingredients and tags name in detail view
+    # ingredients = serializers.SlugRelatedField(slug_field='name', queryset=Ingredient.objects.all(), many=True)
+    # tags = serializers.SlugRelatedField(slug_field='name', queryset=Tag.objects.all(), many=True)
 
     class Meta:
         model = Recipe
