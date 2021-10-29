@@ -32,15 +32,31 @@ class IngredientViewSet(BaseRecipeAttrViewSet):
     queryset = Ingredient.objects.all()
 
 
+def params_to_int(qs):
+    """Convert a list of string IDs to a list of ints"""
+    return [int(str_id) for str_id in qs.split(',')]
+
+
 class RecipeViewSet(viewsets.ModelViewSet):
     """Manage recipes in the database"""
+    queryset = Recipe.objects.all()
     serializer_class = serializers.RecipeSerializer
     authentication_classes = (authentication.TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
-        return Recipe.objects.filter(user=self.request.user).order_by('-id')
+        recipes = self.queryset
+        tags = self.request.query_params.get('tags')
+        ingredients = self.request.query_params.get('ingredients')
+        if tags:
+            tag_ids = params_to_int(tags)
+            recipes = recipes.filter(tags__id__in=tag_ids)
+        if ingredients:
+            ingredient_ids = params_to_int(ingredients)
+            recipes = recipes.filter(ingredients__id__in=ingredient_ids)
+
+        return recipes.filter(user=self.request.user).order_by('-id')
 
     def get_serializer_class(self):
         """Return appropriate serializer class"""
