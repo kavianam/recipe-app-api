@@ -6,7 +6,7 @@ from django.conf import settings
 
 
 def recipe_image_file_path(instance, filename):
-    """Generate file path for new recipe image"""
+    """Generate file path for new recipe image. Images will be stored in this path relative to the MEDIA_ROOT."""
     extension = filename.split('.')[-1]
     new_filename = f'{uuid.uuid4()}.{extension}'
 
