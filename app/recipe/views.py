@@ -15,7 +15,15 @@ class BaseRecipeAttrViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         """Return objects for the current authenticated user only"""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        queryset = self.queryset
+        assigned_only = bool(int(self.request.query_params.get('assigned_only', 0)))
+        if assigned_only:
+            queryset = queryset.filter(recipes__isnull=False)
+            # Django return one item for every related items means for every
+            # it may return duplicate obj that we can remove them by distinct.
+        return queryset.filter(user=self.request.user)\
+                       .order_by('-name')\
+                       .distinct()
 
     def perform_create(self, serializer):
         """Assign the user to the obj. We can also override the create method of the Serializer"""

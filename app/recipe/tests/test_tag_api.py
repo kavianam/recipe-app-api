@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
 
-from ..models import Tag
+from ..models import Tag, Recipe
 # from recipe.models import Tag
 from ..serializers import TagSerializer
 
@@ -83,3 +83,53 @@ class PrivateTagApiTests(TestCase):
         res = self.client.post(TAG_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_tags_assigned_to_recipe(self):
+        """Test filtering tags by those assigned to recipe"""
+        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
+        tag2 = Tag.objects.create(user=self.user, name='Lunch')
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title='Kebab',
+            time_minutes=25,
+            price=80.00
+        )
+        recipe.tags.add(tag1)
+
+        res = self.client.get(
+            TAG_URL,
+            {'assigned_only': 1}
+        )
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering by assigned unique items"""
+        tag = Tag.objects.create(user=self.user, name='Lunch')
+        Tag.objects.create(user=self.user, name='Breakfast')
+        recipe1 = Recipe.objects.create(
+            user=self.user,
+            title='Kebab',
+            time_minutes=25,
+            price=80.00
+        )
+        recipe2 = Recipe.objects.create(
+            user=self.user,
+            title='Pizza',
+            time_minutes=40,
+            price=60.00
+        )
+        recipe1.tags.add(tag)
+        recipe2.tags.add(tag)
+
+        res = self.client.get(
+            TAG_URL,
+            {'assigned_only': 1}
+        )
+        serializer = TagSerializer(tag)
+
+        self.assertEqual(len(res.data), 1)
+        self.assertIn(serializer.data, res.data)
